@@ -14,61 +14,6 @@ COUNTRIES_FILE = 'src/data/countries.ts'
 
 # 45 countries: id -> display name for search query
 BATCH = {
-    # East Europe (remaining)
-    '428': 'Latvia',
-    '233': 'Estonia',
-    '070': 'Bosnia',
-    # North Africa
-    '012': 'Algeria',
-    '434': 'Libya',
-    '729': 'Sudan',
-    '478': 'Mauritania',
-    # West Africa
-    '384': 'Ivory Coast',
-    '466': 'Mali',
-    '120': 'Cameroon',
-    '854': 'Burkina Faso',
-    '562': 'Niger',
-    '324': 'Guinea',
-    '694': 'Sierra Leone',
-    '768': 'Togo',
-    '204': 'Benin',
-    '430': 'Liberia',
-    '270': 'Gambia',
-    '624': 'Guinea-Bissau',
-    # East Africa
-    '834': 'Tanzania',
-    '508': 'Mozambique',
-    '800': 'Uganda',
-    '646': 'Rwanda',
-    '180': 'DR Congo',
-    '178': 'Republic of Congo',
-    '024': 'Angola',
-    '894': 'Zambia',
-    '716': 'Zimbabwe',
-    '454': 'Malawi',
-    '516': 'Namibia',
-    '072': 'Botswana',
-    '450': 'Madagascar',
-    '706': 'Somalia',
-    '232': 'Eritrea',
-    '140': 'Central African Republic',
-    '148': 'Chad',
-    '748': 'Eswatini',
-    '426': 'Lesotho',
-    '108': 'Burundi',
-    '728': 'South Sudan',
-    '262': 'Djibouti',
-    # Latin America
-    '152': 'Chile',
-    '192': 'Cuba',
-    '862': 'Venezuela',
-    '218': 'Ecuador',
-    '068': 'Bolivia',
-    '600': 'Paraguay',
-    '858': 'Uruguay',
-    '591': 'Panama',
-    '188': 'Costa Rica',
     '320': 'Guatemala',
     '340': 'Honduras',
     '222': 'El Salvador',
@@ -80,10 +25,8 @@ BATCH = {
     '084': 'Belize',
     '044': 'Bahamas',
     '780': 'Trinidad and Tobago',
-    # Oceania
     '554': 'New Zealand',
     '598': 'Papua New Guinea',
-    # Caribbean
     '388': 'Jamaica',
 }
 

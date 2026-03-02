@@ -7,7 +7,6 @@ import PhotoGallery from './PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 
 interface RegionModalProps {
@@ -25,7 +24,7 @@ export default function RegionModal({ country, onClose }: RegionModalProps) {
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center p-2 sm:p-4">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -57,7 +56,7 @@ export default function RegionModal({ country, onClose }: RegionModalProps) {
             <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, hsl(var(--border)) 25%, hsl(var(--border)) 75%, transparent)' }} />
           </div>
 
-          <ScrollArea className="max-h-[80vh]">
+          <div className="overflow-y-auto max-h-[70vh] sm:max-h-[80vh]">
             <CardContent className="px-6 pt-5 pb-6 space-y-5">
               {/* Description */}
               <p className="text-base lg:text-lg 2xl:text-xl text-muted-foreground leading-relaxed">{country.description}</p>
@@ -124,7 +123,7 @@ export default function RegionModal({ country, onClose }: RegionModalProps) {
                 <span className="text-sm 2xl:text-base text-muted-foreground">{country.funFact}</span>
               </div>
             </CardContent>
-          </ScrollArea>
+          </div>
         </Card>
       </motion.div>
     </div>
