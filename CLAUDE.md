@@ -1,31 +1,47 @@
 # MapViz — Global Cuisines Map
 
 ## Commands
-- `pnpm dev` — Start dev server (localhost:5173)
-- `pnpm build` — Type-check + production build
-- `pnpm preview` — Preview production build
-- `pnpm lint` — ESLint
+- `npm run dev` — Start dev server (localhost:5173)
+- `npm run build` — Type-check + production build
+- `npm run preview` — Preview production build
+- `python3 scripts/fetch-images.py` — Fetch Unsplash images for a batch of countries
 
 ## Architecture
-Single-page app: interactive SVG world map with 12 clickable culinary regions. No backend, no routing.
+Single-page app: interactive SVG world map with 12 culinary regions. No backend, no routing, all data hardcoded.
 
 ### Stack
-Vite + React 19 + TypeScript + TailwindCSS v3 + react-simple-maps + framer-motion
+Vite + React 18 + TypeScript + TailwindCSS v3 + react-simple-maps + framer-motion + shadcn/ui
 
-### Key directories
-- `src/data/` — Region definitions (`regions.ts`) and ISO country→region mapping (`countryRegionMap.ts`)
-- `src/components/` — WorldMap, RegionModal, RegionTooltip, PhotoGallery, Header, Legend
-- `src/hooks/` — `useMapInteraction` manages selected/hovered region state
-- `src/utils/` — Helper functions for country→region lookups
-- `src/types/` — TypeScript interfaces (CulinaryRegion, Dish, UnsplashImage)
+### Key files
+- `src/data/countries.ts` — 158 countries, each with description, keyIngredients, signatureDishes, images, funFact
+- `src/data/countryRegionMap.ts` — ISO numeric country code → culinary region ID
+- `src/data/regions.ts` — 12 culinary regions with name and color
+- `src/components/WorldMap.tsx` — SVG map via react-simple-maps, geoNaturalEarth1 projection
+- `src/components/RegionModal.tsx` — Country detail modal (dishes, ingredients, gallery, fun fact)
+- `src/components/Sidebar.tsx` — Left drawer with search + region-grouped country list
+- `src/components/Header.tsx` — Title bar with sidebar toggle (left) and theme toggle (right)
+- `src/hooks/useMapInteraction.ts` — selected/hovered country state
+- `src/hooks/useScrollDrag.ts` — drag-to-pan on the map container
+- `src/hooks/useTheme.ts` — dark/light mode with localStorage persistence
 
 ### Map data
 - TopoJSON from `cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json`
-- Country IDs are ISO 3166-1 numeric codes (e.g., "840" = USA)
-- `countryRegionMap.ts` maps ~150 country codes to 12 culinary region IDs
+- Country IDs are ISO 3166-1 numeric codes (e.g. `'840'` = USA)
+- Map fills use `withAlpha(hex, alpha)` over a `var(--ocean)` SVG rect background
+
+### Images
+- Stored as flat `images[]` on each country (up to 25 per country)
+- Fetched via Unsplash API (`"{country} food"` query, 25 results)
+- `scripts/fetch-images.py` handles batch fetching — update `BATCH` dict and run
+- 32 countries still have no images (low Unsplash coverage for obscure nations)
+- Gallery hidden automatically when `images.length === 0`
+
+### Deployment
+- Cloudflare Pages: build command `npm run build`, output dir `dist`
+- Repo: https://github.com/hayabhay/vibe-cuisine
 
 ## Conventions
 - Use `import type` for type-only imports (verbatimModuleSyntax is enabled)
-- Region colors are defined in `regions.ts`, not in Tailwind config
-- Dark theme: surface-900 (#0B0F19) background, surface-800 (#111827) cards
-- Use pnpm (not npm)
+- Region colors defined in `regions.ts`
+- Ocean color shared via CSS var `--ocean` between header bg and SVG rect
+- `[&_svg]:size-auto` needed on Button when overriding icon size (shadcn forces `size-4` on all SVGs)
