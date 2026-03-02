@@ -1,4 +1,4 @@
-# MapViz — Global Cuisines Map
+# nodo thulla deepak — Global Cuisines Map
 
 ## Commands
 - `npm run dev` — Start dev server (localhost:5173)
@@ -37,8 +37,11 @@ Vite + React 18 + TypeScript + TailwindCSS v3 + react-simple-maps + framer-motio
 - Gallery hidden automatically when `images.length === 0`
 
 ### Deployment
-- Cloudflare Pages: build command `npm run build`, output dir `dist`
+- Cloudflare Pages: build command `npm run build`, output dir `dist`, install command `npm install`
 - Repo: https://github.com/hayabhay/vibe-cuisine
+- Live: https://vibe-cuisine.abhay.fyi
+- OG image: `public/og.png` (1200×630, generated with Pillow, regenerate via `python3 scripts/gen-og.py`)
+- OG URLs are hardcoded as absolute URLs to `vibe-cuisine.abhay.fyi` in `index.html`
 
 ## Conventions
 - Use `import type` for type-only imports (verbatimModuleSyntax is enabled)
