@@ -1,4 +1,4 @@
-# nodo thulla deepak — Global Cuisines Map
+# cuisine explorer — Global Cuisines Map
 
 ## Commands
 - `npm run dev` — Start dev server (localhost:5173)

@@ -26,7 +26,7 @@ export default function Header({ onToggleSidebar, isDark, onToggleTheme }: Heade
 
       <div className="text-center">
         <h1 className="font-mono text-xl lg:text-2xl 2xl:text-3xl font-bold tracking-tight text-foreground">
-          nodo thulla deepak
+          cuisine explorer
         </h1>
         <p className="font-mono text-xs lg:text-sm 2xl:text-base text-muted-foreground tracking-wide mt-0.5">
           click a region to explore
