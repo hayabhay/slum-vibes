@@ -66,6 +66,7 @@ Dark ambient homepage with dual infinite-scrolling polaroid film strips (persona
 - `functions/api/strava/athletes.ts` — returns `athletes` KV (Athlete[])
 - `functions/api/strava/activity-roasts.ts` — per-activity AI roasts (Record<string, string>)
 - `functions/api/strava/athlete-roasts.ts` — per-person AI roasts, 24h TTL (Record<string, string>)
+- `functions/api/strava/nicknames.ts` — returns `nicknames` KV (Record<firstname, nickname>)
 - `scripts/sync-strava-club.mjs` — daily sync: fetches club members + activities, writes KV
 - `.github/workflows/sync-strava.yml` — cron at 6am UTC, runs sync script
 
@@ -79,6 +80,7 @@ Frontend fetches fresh from KV on each load (no localStorage caching).
 - `activities` — `[...activities array...]` — full activity list (up to 600, overwritten daily)
 - `roast:activity:{activityId}` — plain roast string per activity (immutable)
 - `roast:athlete:{firstname}` — plain roast string per person (24h TTL via KV expiration)
+- `nicknames` — `{"Swaroop":"Shanda Swa",...}` — display names for UI + roast descriptions
 - `roast_prompt` — optional custom system prompt (shared by both roast endpoints)
 
 **Cloudflare bindings required** (set in Pages project settings):
@@ -104,13 +106,19 @@ LOCAL=1 STRAVA_CLUB_ID=1954938 STRAVA_ATHLETE_ID=199191837 node scripts/sync-str
 STRAVA_CLUB_ID=1954938 STRAVA_ATHLETE_ID=199191837 node scripts/sync-strava-club.mjs
 # Set a custom roast prompt
 npx wrangler kv key put --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 roast_prompt "your prompt"
-# List roast keys (activity and athlete roasts are individual keys)
+# List roast keys
 npx wrangler kv key list --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 --prefix=roast:
+# Purge all cached roasts (to regenerate with new prompt)
+npx wrangler kv key list --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 --prefix=roast: | grep -o '"roast:[^"]*"' | sed 's/"//g' | while read key; do npx wrangler kv key delete --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 "$key"; done
+# Update nicknames
+npx wrangler kv key put --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 nicknames '{"Swaroop":"Shanda Swa","Deepak":"Thulla Deepak","Pradeep":"Penga Catty","Paneendra":"Shani Pani","Nishchit":"Bewarsi Bolar","Manjunath":"Mental Manja","Abhay":"Cool Abhay","Pramod":"Poli Pammi"}'
 # List all KV keys
 npx wrangler kv key list --remote --namespace-id=b3039d030a994346bb7b165dcbd86140
 ```
 
-**AI model:** `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (Cloudflare AI free tier, hits remote even in local dev)
+**AI model:** `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (Cloudflare AI free tier, hits remote even in local dev, 100k tokens/day limit)
+
+**Roast generation:** AI generates roasts for new activities (5 per request, capped to avoid timeout). Roasts can also be hand-written directly to KV — the endpoint only generates for missing keys. Nicknames are passed in the AI prompt description so roasts use them naturally.
 
 **Strava API gotchas:**
 - Club activities (`/clubs/{id}/activities`) return `ClubActivity` — no `start_date`, no athlete ID, lastname truncated to initial (e.g. `"K."`)
