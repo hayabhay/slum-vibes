@@ -49,7 +49,7 @@ export default function RegionModal({ country, onClose }: RegionModalProps) {
           {flagUrl ? (
             /* Flag Header */
             <div
-              className="relative h-20 lg:h-24 2xl:h-28 rounded-t-lg overflow-hidden"
+              className="relative h-32 lg:h-36 2xl:h-40 rounded-t-lg overflow-hidden"
               style={{ backgroundImage: `url(${flagUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
             >
               {/* Dark gradient overlay for readability */}
