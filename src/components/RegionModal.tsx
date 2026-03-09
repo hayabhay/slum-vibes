@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { CountryCuisine } from '../types';
 import { getRegionColor } from '../utils/mapHelpers';
+import { getFlagUrl } from '../utils/flagHelpers';
 import PhotoGallery from './PhotoGallery';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ interface RegionModalProps {
 
 export default function RegionModal({ country, onClose }: RegionModalProps) {
   const accentColor = getRegionColor(country.id);
+  const flagUrl = getFlagUrl(country.id);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -43,18 +45,40 @@ export default function RegionModal({ country, onClose }: RegionModalProps) {
         transition={{ duration: 0.2, ease: 'easeOut' }}
         className="relative z-50 w-full max-w-4xl 2xl:max-w-5xl"
       >
-        <Card className="border-border shadow-2xl">
-          {/* Accent bar */}
-          <div className="h-1 rounded-t-lg" style={{ backgroundColor: accentColor }} />
-
-          {/* Header */}
-          <div className="relative flex items-center justify-center px-6 pt-5 pb-4">
-            <h2 className="font-mono text-2xl lg:text-3xl 2xl:text-4xl font-bold text-foreground">{country.name}</h2>
-            <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-5 [&_svg]:size-auto text-muted-foreground hover:text-foreground">
-              <X className="w-6 h-6 2xl:w-7 2xl:h-7" />
-            </Button>
-            <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, hsl(var(--border)) 25%, hsl(var(--border)) 75%, transparent)' }} />
-          </div>
+        <Card className="border-border shadow-2xl overflow-hidden">
+          {flagUrl ? (
+            /* Flag Header */
+            <div
+              className="relative h-44 lg:h-52 2xl:h-60 rounded-t-lg overflow-hidden"
+              style={{ backgroundImage: `url(${flagUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+            >
+              {/* Dark gradient overlay for readability */}
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.35) 55%, rgba(0,0,0,0.18) 100%)' }} />
+              {/* Accent bar at bottom */}
+              <div className="absolute bottom-0 left-0 right-0 h-1" style={{ backgroundColor: accentColor }} />
+              {/* Country name */}
+              <div className="absolute inset-0 flex items-end px-6 pb-5">
+                <h2 className="font-mono text-2xl lg:text-3xl 2xl:text-4xl font-bold text-white drop-shadow-lg">{country.name}</h2>
+              </div>
+              {/* Close button */}
+              <Button variant="ghost" size="icon" onClick={onClose} className="absolute top-3 right-3 [&_svg]:size-auto text-white/80 hover:text-white hover:bg-black/20">
+                <X className="w-6 h-6 2xl:w-7 2xl:h-7" />
+              </Button>
+            </div>
+          ) : (
+            <>
+              {/* Accent bar (fallback when no flag) */}
+              <div className="h-1 rounded-t-lg" style={{ backgroundColor: accentColor }} />
+              {/* Header */}
+              <div className="relative flex items-center justify-center px-6 pt-5 pb-4">
+                <h2 className="font-mono text-2xl lg:text-3xl 2xl:text-4xl font-bold text-foreground">{country.name}</h2>
+                <Button variant="ghost" size="icon" onClick={onClose} className="absolute right-5 [&_svg]:size-auto text-muted-foreground hover:text-foreground">
+                  <X className="w-6 h-6 2xl:w-7 2xl:h-7" />
+                </Button>
+                <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, hsl(var(--border)) 25%, hsl(var(--border)) 75%, transparent)' }} />
+              </div>
+            </>
+          )}
 
           <div className="overflow-y-auto max-h-[70vh] sm:max-h-[80vh]">
             <CardContent className="px-6 pt-5 pb-6 space-y-5">
