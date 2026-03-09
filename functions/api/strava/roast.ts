@@ -29,16 +29,16 @@ const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
   const force = new URL(request.url).searchParams.has('force');
 
-  // Return cached roast if it's less than 24 hours old
+  // Return cached roasts if less than 24 hours old
   if (!force) {
-    const cached = await env.STRAVA_KV.get('roast_cache', 'json') as { roast: string; generated_at: number } | null;
+    const cached = await env.STRAVA_KV.get('roast_cache', 'json') as { roasts: Record<string, string>; generated_at: number } | null;
     if (cached && Date.now() - cached.generated_at < ONE_DAY_MS) {
-      return Response.json({ roast: cached.roast, cached: true });
+      return Response.json({ roasts: cached.roasts, cached: true });
     }
   }
 
   const raw = await env.STRAVA_KV.get('athlete_ids');
-  if (!raw) return Response.json({ roast: 'nobody has connected strava yet. cowards.' });
+  if (!raw) return Response.json({ roasts: {} });
 
   const ids: number[] = JSON.parse(raw);
 
@@ -67,10 +67,11 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
       : 999;
 
     return {
+      id,
+      firstname: data.athlete.firstname,
       name: `${data.athlete.firstname} ${data.athlete.lastname}`,
       recent_km: (stats.recent_run_totals.distance / 1000).toFixed(1),
       recent_runs: stats.recent_run_totals.count,
-      ytd_km: (stats.ytd_run_totals.distance / 1000).toFixed(1),
       days_since_last: daysSinceLast,
       recent_activity_names: activities.slice(0, 5).map((a: any) => a.name),
     };
@@ -78,25 +79,37 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
 
   const group = athletes.filter(Boolean);
 
-  const defaultPrompt = `You are a savage but loving friend roasting your group's Strava activity. Keep it short, punchy, and funny. No bullet points — just flowing trash talk like a group chat message. Call people out by first name. Pick an MVP and a slacker. Be funny, not mean. Max 150 words.`;
+  const defaultPrompt = `You are Donald Trump roasting your friends' Strava activity. One sentence per person, Trump style — superlatives, nicknames, self-congratulation. Mix in some Kannada/Hinglish like a Bangalorean Trump. Be brief and brutal.`;
   const customPrompt = await env.STRAVA_KV.get('roast_prompt');
   const systemPrompt = customPrompt ?? defaultPrompt;
 
   const prompt = `${systemPrompt}
 
 Here's the crew's data from the last 4 weeks:
-${group.map(a => `
-- ${a!.name}: ${a!.recent_km}km over ${a!.recent_runs} runs, ${a!.days_since_last} days since last activity. Recent activity names: ${a!.recent_activity_names.join(', ') || 'none'}`).join('')}`;
+${group.map(a => `- ${a!.name}: ${a!.recent_km}km over ${a!.recent_runs} runs, ${a!.days_since_last} days since last activity. Recent activity names: ${a!.recent_activity_names.join(', ') || 'none'}`).join('\n')}
+
+Respond ONLY with a JSON object mapping each person's first name to their roast sentence. Example format:
+{"Firstname": "roast sentence", "Firstname2": "roast sentence"}
+No other text, just the JSON.`;
 
   const response = await env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
     messages: [{ role: 'user', content: prompt }],
-    max_tokens: 300,
+    max_tokens: 400,
   }) as any;
 
-  const roast = response.response as string;
+  // response.response may already be a parsed object or a JSON string
+  let roasts: Record<string, string> = {};
+  try {
+    const raw = response.response;
+    if (typeof raw === 'object') {
+      roasts = raw;
+    } else {
+      const match = (raw as string).match(/\{[\s\S]*\}/);
+      if (match) roasts = JSON.parse(match[0]);
+    }
+  } catch {}
 
-  // Cache it
-  await env.STRAVA_KV.put('roast_cache', JSON.stringify({ roast, generated_at: Date.now() }));
+  await env.STRAVA_KV.put('roast_cache', JSON.stringify({ roasts, generated_at: Date.now() }));
 
-  return Response.json({ roast, cached: false });
+  return Response.json({ roasts, cached: false });
 };

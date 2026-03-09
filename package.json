@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "pages:dev": "wrangler pages dev dist",
+    "dev:full": "concurrently \"vite build --watch\" \"wrangler pages dev dist --port 8788\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -35,6 +36,7 @@
     "@types/react-simple-maps": "^3.0.6",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.27",
+    "concurrently": "^9.2.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",

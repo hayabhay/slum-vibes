@@ -50,5 +50,5 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, request }) => {
     await env.STRAVA_KV.put('athlete_ids', JSON.stringify(ids));
   }
 
-  return Response.redirect(`${url.origin}/strava?connected=1`, 302);
+  return Response.redirect(`${url.origin}/strava?connected=1&aid=${athlete.id}`, 302);
 };
