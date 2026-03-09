@@ -59,7 +59,8 @@ function fmtTime(seconds: number) {
 type Tab = 'feed' | 'leaderboard';
 type Metric = 'distance' | 'elevation' | 'count';
 
-function metricVal(totals: Totals, metric: Metric) {
+function metricVal(totals: Totals | undefined, metric: Metric) {
+  if (!totals) return 0;
   if (metric === 'distance') return totals.distance;
   if (metric === 'elevation') return totals.elevation_gain;
   return totals.count;
