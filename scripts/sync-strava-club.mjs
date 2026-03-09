@@ -22,12 +22,12 @@ const remoteFlag = process.env.LOCAL ? '' : '--remote';
 
 function kvGet(key) {
   try {
-    const out = execSync(
-      `npx wrangler kv key get ${remoteFlag} --namespace-id=${KV_NAMESPACE_ID} "${key}"`,
-      { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }
-    ).trim();
+    const cmd = `wrangler kv key get ${remoteFlag} --namespace-id=${KV_NAMESPACE_ID} "${key}"`;
+    console.log(`KV GET: ${cmd}`);
+    const out = execSync(cmd, { encoding: 'utf8', stdio: ['pipe', 'pipe', 'pipe'] }).trim();
     return JSON.parse(out);
-  } catch {
+  } catch (e) {
+    console.error(`KV GET failed for "${key}":`, e.stderr?.toString() || e.message);
     return null;
   }
 }
@@ -35,7 +35,7 @@ function kvGet(key) {
 function kvPut(key, value) {
   const json = JSON.stringify(value);
   execSync(
-    `npx wrangler kv key put ${remoteFlag} --namespace-id=${KV_NAMESPACE_ID} "${key}" '${json.replace(/'/g, "'\\''")}'`,
+    `wrangler kv key put ${remoteFlag} --namespace-id=${KV_NAMESPACE_ID} "${key}" '${json.replace(/'/g, "'\\''")}'`,
     { stdio: 'inherit' }
   );
 }
