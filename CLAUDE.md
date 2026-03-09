@@ -58,6 +58,45 @@ Dark ambient homepage with dual infinite-scrolling polaroid film strips (persona
 - 32 countries still have no images (low Unsplash coverage for obscure nations)
 - Gallery hidden automatically when `images.length === 0`
 
+### Strava app (`/strava`)
+- `src/pages/StravaPage.tsx` — leaderboard + daily roast UI
+- `functions/api/strava/auth.ts` — redirects to Strava OAuth
+- `functions/api/strava/callback.ts` — exchanges code, stores tokens in KV
+- `functions/api/strava/athletes.ts` — fetches all athletes' stats (refreshes tokens on demand)
+- `functions/api/strava/roast.ts` — generates daily AI roast via Cloudflare AI, cached in KV
+
+**Onboarding:** each person visits `/strava` and clicks "+ connect" once. OAuth stores their tokens in KV permanently.
+
+**KV keys:**
+- `athlete_ids` — JSON array of connected athlete IDs
+- `athlete:{id}` — `{ access_token, refresh_token, expires_at, athlete: { id, firstname, lastname, profile } }`
+- `roast_cache` — `{ roast, generated_at }` — regenerated once per 24h (first page load of the day triggers it)
+- `roast_prompt` — optional custom system prompt for the roast (falls back to default if not set)
+
+**Cloudflare bindings required** (set in Pages project settings):
+- KV namespace: `STRAVA_KV` (id: `b3039d030a994346bb7b165dcbd86140`)
+- AI binding: `AI`
+- Env vars: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`
+
+**Local dev:**
+- `pnpm build && pnpm pages:dev` — builds frontend then serves via wrangler on localhost:8788
+- `.env.local` must have `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET`
+- OAuth callback goes to prod (`slum-vibes.abhay.fyi`) — test OAuth on deployed site, everything else locally
+
+**Useful KV commands:**
+```bash
+# Set a custom roast prompt
+npx wrangler kv key put --binding=STRAVA_KV roast_prompt "your prompt here"
+# Reset to default prompt
+npx wrangler kv key delete --binding=STRAVA_KV roast_prompt
+# Force-clear the roast cache (next page load regenerates)
+npx wrangler kv key delete --binding=STRAVA_KV roast_cache
+# List all KV keys
+npx wrangler kv key list --binding=STRAVA_KV
+```
+
+**AI model:** `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (Cloudflare AI free tier, hits remote even in local dev)
+
 ### Deployment
 - Cloudflare Pages: build command `pnpm build`, output dir `dist`, install command `pnpm install`
 - Repo: https://github.com/hayabhay/slum-vibes

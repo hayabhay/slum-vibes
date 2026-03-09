@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './index.css'
 import IndexPage from './pages/IndexPage'
 import CuisinePage from './pages/CuisinePage'
+import StravaPage from './pages/StravaPage'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -11,6 +12,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<IndexPage />} />
         <Route path="/cuisine" element={<CuisinePage />} />
+        <Route path="/strava" element={<StravaPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

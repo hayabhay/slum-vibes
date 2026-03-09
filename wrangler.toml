@@ -1,0 +1,9 @@
+name = "slum-vibes"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "STRAVA_KV"
+id = "b3039d030a994346bb7b165dcbd86140"
+
+[ai]
+binding = "AI"

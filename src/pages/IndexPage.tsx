@@ -9,6 +9,12 @@ const apps = [
     description: 'An interactive world map exploring cuisines from 158 countries.',
     emoji: '🗺️',
   },
+  {
+    slug: 'strava',
+    name: 'strava wars',
+    description: 'Who among us is actually moving.',
+    emoji: '🏃',
+  },
 ];
 
 const PHOTOS = [
