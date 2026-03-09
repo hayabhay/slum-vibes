@@ -59,19 +59,26 @@ Dark ambient homepage with dual infinite-scrolling polaroid film strips (persona
 - Gallery hidden automatically when `images.length === 0`
 
 ### Strava app (`/strava`)
-- `src/pages/StravaPage.tsx` — leaderboard + daily roast UI
-- `functions/api/strava/auth.ts` — redirects to Strava OAuth
-- `functions/api/strava/callback.ts` — exchanges code, stores tokens in KV
-- `functions/api/strava/athletes.ts` — fetches all athletes' stats (refreshes tokens on demand)
-- `functions/api/strava/roast.ts` — generates daily AI roast via Cloudflare AI, cached in KV
+- `src/pages/StravaPage.tsx` — activity feed (primary) + leaderboard tabs, localStorage caching
+- `functions/api/strava/_shared.ts` — shared `parseRoasts` helper
+- `functions/api/strava/activities.ts` — returns `club_activities` KV
+- `functions/api/strava/athletes.ts` — returns `club_scraped` KV
+- `functions/api/strava/activity-roasts.ts` — per-activity AI roasts, batched + cached in KV
+- `functions/api/strava/roast.ts` — per-person AI roasts, cached in KV
+- `scripts/sync-strava-club.mjs` — daily sync: fetches club members + activities, writes KV
+- `.github/workflows/sync-strava.yml` — cron at 6am UTC, runs sync script
 
-**Onboarding:** each person visits `/strava` and clicks "+ connect" once. OAuth stores their tokens in KV permanently.
+**Data flow:** No OAuth connect flow. One account (athlete `199191837`) is pre-authorized.
+GitHub Actions syncs daily using stored tokens + Strava club API (club `1954938`).
+Frontend reads from KV, caches in localStorage with versioned keys.
 
 **KV keys:**
-- `athlete_ids` — JSON array of connected athlete IDs
-- `athlete:{id}` — `{ access_token, refresh_token, expires_at, athlete: { id, firstname, lastname, profile } }`
-- `roast_cache` — `{ roast, generated_at }` — regenerated once per 24h (first page load of the day triggers it)
-- `roast_prompt` — optional custom system prompt for the roast (falls back to default if not set)
+- `athlete:199191837` — stored OAuth token for the sync account
+- `club_scraped` — `{ scraped_at, athletes[] }` — leaderboard data (stats.totals shape)
+- `club_activities` — `{ updated_at, activities[] }` — full activity list (up to 600)
+- `activity_roasts` — `{ [activityId]: roastString }` — per-activity roast cache
+- `roast_cache` — `{ roasts: { [firstname]: string }, generated_at }` — per-person roast cache
+- `roast_prompt` — optional custom system prompt (shared by both roast endpoints)
 
 **Cloudflare bindings required** (set in Pages project settings):
 - KV namespace: `STRAVA_KV` (id: `b3039d030a994346bb7b165dcbd86140`)
@@ -79,24 +86,41 @@ Dark ambient homepage with dual infinite-scrolling polaroid film strips (persona
 - Env vars: `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`
 
 **Local dev:**
-- `pnpm build && pnpm pages:dev` — builds frontend then serves via wrangler on localhost:8788
-- `.env.local` must have `STRAVA_CLIENT_ID` and `STRAVA_CLIENT_SECRET`
-- OAuth callback goes to prod (`slum-vibes.abhay.fyi`) — test OAuth on deployed site, everything else locally
-- To give a collaborator Cloudflare access without full account access: dash.cloudflare.com → My Profile → API Tokens → Create Token → use "Edit Cloudflare Workers" template. They add `CLOUDFLARE_API_TOKEN=xxx` to their `.env.local`
+- `pnpm dev:full` — vite watch + wrangler pages dev on localhost:8788
+- Seed local KV before testing: `LOCAL=1 STRAVA_CLUB_ID=1954938 STRAVA_ATHLETE_ID=199191837 node scripts/sync-strava-club.mjs`
+- CF Workers AI returns 502 in local dev — roasts won't generate locally, test on deployed site
+- To give a collaborator Cloudflare access: dash.cloudflare.com → API Tokens → "Edit Cloudflare Workers" template → add `CLOUDFLARE_API_TOKEN=xxx` to their `.env.local`
+
+**GitHub Actions secrets required:** `CF_API_TOKEN`, `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`
+- `CF_API_TOKEN` — create at dash.cloudflare.com → API Tokens → "Edit Cloudflare Workers" template
+- Wrangler in CI reads it as `CLOUDFLARE_API_TOKEN` env var automatically
 
 **Useful KV commands:**
 ```bash
+# Seed local KV for dev
+LOCAL=1 STRAVA_CLUB_ID=1954938 STRAVA_ATHLETE_ID=199191837 node scripts/sync-strava-club.mjs
+# Seed remote KV manually (same as GitHub Actions)
+STRAVA_CLUB_ID=1954938 STRAVA_ATHLETE_ID=199191837 node scripts/sync-strava-club.mjs
 # Set a custom roast prompt
-npx wrangler kv key put --binding=STRAVA_KV roast_prompt "your prompt here"
-# Reset to default prompt
-npx wrangler kv key delete --binding=STRAVA_KV roast_prompt
-# Force-clear the roast cache (next page load regenerates)
-npx wrangler kv key delete --binding=STRAVA_KV roast_cache
+npx wrangler kv key put --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 roast_prompt "your prompt"
+# Force-clear roast caches
+npx wrangler kv key delete --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 roast_cache
+npx wrangler kv key delete --remote --namespace-id=b3039d030a994346bb7b165dcbd86140 activity_roasts
 # List all KV keys
-npx wrangler kv key list --binding=STRAVA_KV
+npx wrangler kv key list --remote --namespace-id=b3039d030a994346bb7b165dcbd86140
 ```
 
 **AI model:** `@cf/meta/llama-3.3-70b-instruct-fp8-fast` (Cloudflare AI free tier, hits remote even in local dev)
+
+**Strava API gotchas:**
+- Club activities (`/clubs/{id}/activities`) return `ClubActivity` — no `start_date`, no athlete ID, lastname truncated to initial (e.g. `"K."`)
+- Match activities to members by `firstname + lastname[0]` — build a `Map` for O(n) lookup, not O(n×m) filter
+- Sandbox limit (1 connected athlete) bypassed by using club endpoints with one pre-authorized member account
+
+**Wrangler gotchas:**
+- `wrangler pages dev` does NOT support `--remote` flag (v4) — local KV is always a simulation
+- `wrangler kv key get/put` without `--remote` targets local simulation, not production — always pass `--remote` for prod
+- localStorage cache keys must be versioned (e.g. `sv_athletes_v2`) when data shape changes — stale cache causes runtime crashes
 
 ### Deployment
 - Cloudflare Pages: build command `pnpm build`, output dir `dist`, install command `pnpm install`
