@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Github } from 'lucide-react';
 
 const apps = [
   {
@@ -80,6 +81,17 @@ export default function IndexPage() {
       <h1 className="absolute top-6 left-0 right-0 text-center z-10 font-mono text-3xl sm:text-4xl font-bold tracking-tight text-white drop-shadow-lg">
         slum vibes
       </h1>
+
+      {/* GitHub link — top right */}
+      <a
+        href="https://github.com/hayabhay/slum-vibes"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute top-6 right-6 z-10 text-white/40 hover:text-white/80 transition-colors"
+        aria-label="GitHub"
+      >
+        <Github className="w-5 h-5" />
+      </a>
 
       <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-4xl">
         {apps.map((app) => (

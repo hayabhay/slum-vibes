@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Search, X, Sun, Moon } from 'lucide-react';
+import { Search, X, Sun, Moon, Github } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -56,14 +56,21 @@ export default function Sidebar({ isOpen, onCountryClick, onClose, isDark, onTog
         isOpen ? 'translate-x-0' : 'translate-x-full',
       )}
     >
-      {/* Close + theme toggle */}
+      {/* Close + theme toggle + github */}
       <div className="flex justify-between px-3 pt-3 shrink-0">
         <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close sidebar">
           <X className="w-5 h-5 2xl:w-6 2xl:h-6" />
         </Button>
-        <Button variant="ghost" size="icon" onClick={onToggleTheme} aria-label="Toggle theme">
-          {isDark ? <Sun className="w-5 h-5 2xl:w-6 2xl:h-6" /> : <Moon className="w-5 h-5 2xl:w-6 2xl:h-6" />}
-        </Button>
+        <div className="flex items-center">
+          <Button variant="ghost" size="icon" onClick={onToggleTheme} aria-label="Toggle theme">
+            {isDark ? <Sun className="w-5 h-5 2xl:w-6 2xl:h-6" /> : <Moon className="w-5 h-5 2xl:w-6 2xl:h-6" />}
+          </Button>
+          <Button variant="ghost" size="icon" asChild aria-label="GitHub">
+            <a href="https://github.com/hayabhay/slum-vibes" target="_blank" rel="noopener noreferrer">
+              <Github className="w-5 h-5 2xl:w-6 2xl:h-6" />
+            </a>
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
