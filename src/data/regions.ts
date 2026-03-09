@@ -13,4 +13,5 @@ export const regions: CulinaryRegion[] = [
   { id: 'east-africa',   name: 'East & Southern Africa', color: '#EC4899', hoverColor: '#F472B6' },
   { id: 'latin-america', name: 'Latin America',          color: '#F43F5E', hoverColor: '#FB7185' },
   { id: 'north-america', name: 'North America',          color: '#14B8A6', hoverColor: '#2DD4BF' },
+  { id: 'oceania',       name: 'Oceania',                color: '#0EA5E9', hoverColor: '#38BDF8' },
 ];

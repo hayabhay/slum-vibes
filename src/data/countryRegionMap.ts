@@ -182,7 +182,9 @@ export const countryRegionMap: Record<string, string> = {
   // North America
   '840': 'north-america', // United States
   '124': 'north-america', // Canada
-  '036': 'north-america', // Australia
-  '554': 'north-america', // New Zealand
+
+  // Oceania
+  '036': 'oceania', // Australia
+  '554': 'oceania', // New Zealand
   '598': 'southeast-asia', // Papua New Guinea
 };
