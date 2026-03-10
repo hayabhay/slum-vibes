@@ -42,18 +42,32 @@ function fmtTime(seconds: number) {
 }
 
 type Tab = 'feed' | 'leaderboard';
-type Metric = 'distance' | 'elevation' | 'count';
+type Metric = 'distance' | 'elevation' | 'count' | 'calories';
+
+function estimateCalories(activity: Activity): number {
+  const hours = activity.moving_time / 3600;
+  const sport = (activity.sport_type ?? '').toLowerCase();
+  let met = 7;
+  if (sport.includes('run')) met = 10;
+  else if (sport.includes('ride') || sport.includes('cycling') || sport.includes('virtual')) met = 8;
+  else if (sport.includes('walk')) met = 4;
+  else if (sport.includes('swim')) met = 7;
+  else if (sport.includes('hike')) met = 6;
+  return Math.round(met * 70 * hours);
+}
 
 function metricVal(totals: Totals | undefined, metric: Metric) {
   if (!totals) return 0;
   if (metric === 'distance') return totals.distance;
   if (metric === 'elevation') return totals.elevation_gain;
-  return totals.count;
+  if (metric === 'count') return totals.count;
+  return 0;
 }
 
 function fmtMetric(val: number, metric: Metric) {
   if (metric === 'distance') return fmt(val);
   if (metric === 'elevation') return `${Math.round(val)}m`;
+  if (metric === 'calories') return `${val.toLocaleString()} kcal`;
   return `${val} activities`;
 }
 
@@ -93,8 +107,16 @@ export default function StravaPage() {
   }, []);
 
 
-  const sorted = [...athletes].sort((a, b) => metricVal(b.stats?.totals, metric) - metricVal(a.stats?.totals, metric));
-  const max = sorted[0] ? metricVal(sorted[0].stats?.totals, metric) : 1;
+  const caloriesMap = activities.reduce<Record<string, number>>((acc, a) => {
+    acc[a.firstname] = (acc[a.firstname] ?? 0) + estimateCalories(a);
+    return acc;
+  }, {});
+
+  const athleteVal = (athlete: Athlete) =>
+    metric === 'calories' ? (caloriesMap[athlete.firstname] ?? 0) : metricVal(athlete.stats?.totals, metric);
+
+  const sorted = [...athletes].sort((a, b) => athleteVal(b) - athleteVal(a));
+  const max = sorted[0] ? athleteVal(sorted[0]) : 1;
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a] text-zinc-900 dark:text-white flex flex-col transition-colors">
@@ -192,7 +214,7 @@ export default function StravaPage() {
           <div className="flex flex-col gap-6">
             {/* Metric toggle */}
             <div className="flex gap-2 flex-wrap justify-end">
-              {(['distance', 'elevation', 'count'] as Metric[]).map(m => (
+              {(['distance', 'elevation', 'count', 'calories'] as Metric[]).map(m => (
                 <button key={m} onClick={() => setMetric(m)}
                   className={`font-mono text-xs px-3 py-1.5 rounded border transition-colors ${
                     metric === m
@@ -209,7 +231,7 @@ export default function StravaPage() {
             ) : (
               <>
                 {sorted.map((athlete, i) => {
-                  const val = metricVal(athlete.stats?.totals, metric);
+                  const val = athleteVal(athlete);
                   const pct = max > 0 ? (val / max) * 100 : 0;
                   const roast = roasts[athlete.firstname];
 
