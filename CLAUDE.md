@@ -18,10 +18,17 @@ Multi-app site with React Router. Each app lives at its own route. Index page at
 Vite + React 19 + TypeScript + TailwindCSS v3 + React Router v7 + framer-motion + shadcn/ui
 
 ### Routing
-- `src/main.tsx` — BrowserRouter + Routes setup
+- `src/main.tsx` — BrowserRouter + Routes setup, wrapped in `PasswordGate`
 - `src/pages/IndexPage.tsx` — Home launcher with photo strips + app cards
 - `src/pages/CuisinePage.tsx` — Route wrapper for `/cuisine`
 - Add new apps as: `src/pages/NewAppPage.tsx` + route in `main.tsx` + entry in `IndexPage.tsx` apps array
+
+### Password gate
+- `src/components/PasswordGate.tsx` — wraps entire app, prompts for password on first visit
+- Correct password saved to `localStorage` key `sv_pass`, checked on subsequent visits
+- Password set via `VITE_SITE_PASSWORD` env var — baked into JS bundle at build time (fine for bot prevention, not true server-side security)
+- If `VITE_SITE_PASSWORD` is unset, gate is skipped (safe for local dev without `.env.local`)
+- Set in `.env.local` for local dev, and in Cloudflare Pages → Settings → Environment Variables for prod
 
 ### Index page (`/`)
 Dark ambient homepage with dual infinite-scrolling polaroid film strips (personal photos).
