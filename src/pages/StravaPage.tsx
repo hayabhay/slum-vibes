@@ -31,6 +31,62 @@ interface Activity {
   elevation_gain: number;
 }
 
+function normalizeProfileUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  if (trimmed.startsWith('http://')) return `https://${trimmed.slice('http://'.length)}`;
+  if (trimmed.startsWith('https://')) return trimmed;
+  if (trimmed.startsWith('/')) return `https://www.strava.com${trimmed}`;
+  return `https://www.strava.com/${trimmed}`;
+}
+
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+function Avatar({
+  name,
+  profile,
+  className,
+}: {
+  name: string;
+  profile: string | null | undefined;
+  className: string;
+}) {
+  const [hasError, setHasError] = useState(false);
+  const src = normalizeProfileUrl(profile);
+
+  if (!src || hasError) {
+    return (
+      <div
+        className={`${className} bg-zinc-100 dark:bg-white/5 text-zinc-500 dark:text-white/50 flex items-center justify-center font-mono text-xs font-bold`}
+        aria-label={name}
+      >
+        {initials(name) || '?'}
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={name}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      className={className}
+      onError={() => setHasError(true)}
+    />
+  );
+}
+
 function fmt(meters: number) {
   return (meters / 1000).toFixed(1) + ' km';
 }
@@ -162,12 +218,11 @@ export default function StravaPage() {
                   return (
                     <div key={activity.id} className="flex gap-4">
                       {/* Avatar */}
-                      {activity.profile ? (
-                        <img src={activity.profile} alt={nick(activity.firstname)}
-                          className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-zinc-100 dark:ring-white/10 mt-0.5" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full shrink-0 bg-zinc-100 dark:bg-white/5 mt-0.5" />
-                      )}
+                      <Avatar
+                        name={nick(activity.firstname)}
+                        profile={activity.profile}
+                        className="w-10 h-10 rounded-full object-cover shrink-0 ring-2 ring-zinc-100 dark:ring-white/10 mt-0.5"
+                      />
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
@@ -238,8 +293,11 @@ export default function StravaPage() {
                   return (
                     <div key={athlete.id} className="flex gap-4">
                       <div className="relative shrink-0">
-                        <img src={athlete.profile} alt={nick(athlete.firstname)}
-                          className="w-12 h-12 rounded-full object-cover ring-2 ring-zinc-100 dark:ring-white/10" />
+                        <Avatar
+                          name={nick(athlete.firstname)}
+                          profile={athlete.profile}
+                          className="w-12 h-12 rounded-full object-cover ring-2 ring-zinc-100 dark:ring-white/10"
+                        />
                         {i < 3 && (
                           <span className="absolute -bottom-1 -right-1 text-sm leading-none">{MEDALS[i]}</span>
                         )}
