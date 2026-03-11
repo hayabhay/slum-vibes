@@ -36,6 +36,10 @@ export default function PasswordGate({ children }: { children: ReactNode }) {
           value={input}
           onChange={e => { setInput(e.target.value); setError(false); }}
           placeholder="password"
+          autoCapitalize="off"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
           className={`font-mono text-sm bg-white/5 border px-4 py-2 rounded text-white placeholder:text-white/20 outline-none focus:border-white/30 transition-colors ${error ? 'border-red-500/60' : 'border-white/10'}`}
         />
         {error && <p className="font-mono text-red-400/70 text-xs">nope</p>}
