@@ -70,6 +70,18 @@ async function stravaGet(path, token) {
   return res.json();
 }
 
+// Normalize Strava profile URLs — club member API often returns relative paths
+// like "avatar/athlete/large.png" for default avatars, which aren't usable.
+function normalizeProfileUrl(url) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+  // Relative default-avatar paths are not real images we can use
+  if (!trimmed.startsWith('http') && !trimmed.startsWith('//')) return null;
+  if (trimmed.startsWith('//')) return `https:${trimmed}`;
+  return trimmed;
+}
+
 // Stable ID for an activity based on content (no date available from club API)
 function activityId(a) {
   return `${a.athlete.firstname.trim()}-${a.athlete.lastname.trim()[0]}-${a.name}-${Math.round(a.distance || 0)}`
@@ -140,7 +152,7 @@ const athletes = members.map(member => {
     id: member.id,
     firstname: fname,
     lastname: member.lastname,
-    profile: member.profile_medium || member.profile,
+    profile: normalizeProfileUrl(member.profile_medium) || normalizeProfileUrl(member.profile),
     stats: { totals },
     // Fields used by the roast endpoint
     recent_km: (totals.distance / 1000).toFixed(1),
@@ -166,7 +178,7 @@ const recentActivities = allActivities.map(a => {
     id: activityId(a),
     firstname: fname,
     lastname: a.athlete.lastname,
-    profile: member?.profile_medium || member?.profile || null,
+    profile: normalizeProfileUrl(member?.profile_medium) || normalizeProfileUrl(member?.profile),
     name: a.name,
     sport_type: a.sport_type || a.type || 'Activity',
     distance: a.distance || 0,
