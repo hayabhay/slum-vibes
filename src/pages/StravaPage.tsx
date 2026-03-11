@@ -29,6 +29,7 @@ interface Activity {
   distance: number;
   moving_time: number;
   elevation_gain: number;
+  synced_at?: string;
 }
 
 function normalizeProfileUrl(url: string | null | undefined): string | null {
@@ -95,6 +96,18 @@ function fmtTime(seconds: number) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+function fmtDate(iso: string) {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const now = new Date();
+  const diffMs = now.getTime() - d.getTime();
+  const diffDays = Math.floor(diffMs / 86_400_000);
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 type Tab = 'feed' | 'leaderboard';
@@ -228,7 +241,12 @@ export default function StravaPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline justify-between gap-2 mb-1">
                           <span className="font-mono font-bold text-sm">{nick(activity.firstname)}</span>
-                          <span className="font-mono text-xs text-zinc-400 dark:text-white/30 shrink-0">{activity.sport_type}</span>
+                          <div className="flex items-baseline gap-2 shrink-0">
+                            {activity.synced_at && (
+                              <span className="font-mono text-xs text-zinc-300 dark:text-white/20">{fmtDate(activity.synced_at)}</span>
+                            )}
+                            <span className="font-mono text-xs text-zinc-400 dark:text-white/30">{activity.sport_type}</span>
+                          </div>
                         </div>
                         <p className="font-mono text-base font-semibold mb-1">{activity.name}</p>
                         <div className="flex gap-3 mb-2">

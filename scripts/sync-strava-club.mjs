@@ -167,6 +167,11 @@ athletes.forEach(a => console.log(`  ${a.firstname} ${a.lastname}: ${a.recent_km
 
 // ── Build activity feed ──────────────────────────────────────────────────────
 
+// Load existing activities to preserve synced_at timestamps for known activities
+const existingActivities = await kvGet('activities') ?? [];
+const existingTimestamps = new Map(existingActivities.map(a => [a.id, a.synced_at]));
+const now = new Date().toISOString();
+
 // Build member profile lookup for activity feed
 const memberByKey = new Map(members.map(m => [`${m.firstname.trim()}|${m.lastname.trim()[0].toUpperCase()}`, m]));
 
@@ -174,8 +179,9 @@ const recentActivities = allActivities.map(a => {
   const fname = a.athlete.firstname.trim();
   const lInitial = a.athlete.lastname.trim()[0].toUpperCase();
   const member = memberByKey.get(`${fname}|${lInitial}`);
+  const id = activityId(a);
   return {
-    id: activityId(a),
+    id,
     firstname: fname,
     lastname: a.athlete.lastname,
     profile: normalizeProfileUrl(member?.profile_medium) || normalizeProfileUrl(member?.profile),
@@ -184,6 +190,7 @@ const recentActivities = allActivities.map(a => {
     distance: a.distance || 0,
     moving_time: a.moving_time || 0,
     elevation_gain: a.total_elevation_gain || 0,
+    synced_at: existingTimestamps.get(id) || now,
   };
 });
 

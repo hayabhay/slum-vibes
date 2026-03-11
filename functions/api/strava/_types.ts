@@ -12,6 +12,7 @@ export interface Activity {
   distance: number;
   moving_time: number;
   elevation_gain: number;
+  synced_at?: string;
 }
 
 export interface ScrapedAthlete {
